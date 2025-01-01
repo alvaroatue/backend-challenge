@@ -27,7 +27,7 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
         UserDto user = userService.getUserById(id);
-        return user ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
+        return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
     }
 
     @PostMapping
@@ -39,7 +39,7 @@ public class UserController {
     @PutMapping("/{id}")
     public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @RequestBody UserDto userDto) {
         UserDto user = userService.updateUser(id, userDto);
-        return user ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
+        return user != null? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
     }
 
     @DeleteMapping("/{id}")

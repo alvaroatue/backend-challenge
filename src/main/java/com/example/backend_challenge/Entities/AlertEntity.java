@@ -36,5 +36,44 @@ public class AlertEntity {
     @Column(nullable = false)
     private AlertType type;
 
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public PlantEntity getPlant() {
+        return plant;
+    }
+
+    public void setPlant(PlantEntity plant) {
+        this.plant = plant;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public AlertType getType() {
+        return type;
+    }
+
+    public void setType(AlertType type) {
+        this.type = type;
+    }
 }
 
