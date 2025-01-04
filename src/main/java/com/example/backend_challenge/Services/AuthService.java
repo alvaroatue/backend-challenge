@@ -9,6 +9,7 @@ import com.example.backend_challenge.Entities.UserEntity;
 import com.example.backend_challenge.Enums.TokenType;
 import com.example.backend_challenge.Repositories.TokenRepository;
 import com.example.backend_challenge.Repositories.UserRepository;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Builder
 public class AuthService {
 
     private final UserRepository userRepository;
