@@ -1,35 +1,35 @@
-package com.example.backend_challenge.Entities;
+    package com.example.backend_challenge.Entities;
 
-import com.example.backend_challenge.Enums.TokenType;
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+    import com.example.backend_challenge.Enums.TokenType;
+    import jakarta.persistence.*;
+    import lombok.AllArgsConstructor;
+    import lombok.Builder;
+    import lombok.Data;
+    import lombok.NoArgsConstructor;
 
-@Data
-@Table(name = "tokens")
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+    @Data
+    @Table(name = "tokens")
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Entity
+    public class TokenEntity {
+        @Id
+        @GeneratedValue
+        private Long id;
 
-public class TokenEntity {
-    @Id
-    @GeneratedValue
-    private Long id;
+        @Column (unique = true)
+        private String token;
 
-    @Column (unique = true)
-    private String token;
+        @Enumerated(EnumType.STRING)
+        private TokenType tokenType = TokenType.BEARER;
 
-    @Enumerated(EnumType.STRING)
-    private TokenType tokenType = TokenType.BEARER;
+        boolean expired;
 
-    boolean expired;
+        boolean revoked;
 
-    boolean revoked;
+        @ManyToOne (fetch = FetchType.LAZY)
+        @JoinColumn  (name = "user_id")
+        UserEntity user;
 
-    @ManyToOne (fetch = FetchType.LAZY)
-    @JoinColumn  (name = "user_id")
-    UserEntity user;
-
-}
+    }

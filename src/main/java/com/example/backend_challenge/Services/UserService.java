@@ -4,7 +4,13 @@ import com.example.backend_challenge.Dtos.UserDto;
 import com.example.backend_challenge.Entities.UserEntity;
 import com.example.backend_challenge.Mappers.UserMapper;
 import com.example.backend_challenge.Repositories.UserRepository;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.apache.catalina.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,16 +18,13 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-public class UserService {
+@RequiredArgsConstructor
+public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
-    private UserMapper userMapper;
+    private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, UserMapper userMapper) {
-        this.userRepository = userRepository;
-        this.userMapper = userMapper;
-    }
     public List<UserDto> getAllUsers() {
-
         return userRepository.findAll()
                 .stream()
                 .map(userMapper::toDto)
@@ -29,25 +32,24 @@ public class UserService {
     }
 
     public UserDto getUserById(Long id) {
-      Optional<UserEntity> user = userRepository.findById(id);
+        Optional<UserEntity> user = userRepository.findById(id);
         return user.map(userMapper::toDto).orElse(null);
     }
-    public UserDto createUser(UserDto userDto) {
 
+    public UserDto createUser(UserDto userDto) {
         Optional<UserEntity> user = userRepository.findByEmail(userDto.getEmail());
-        if(user.isPresent())
-        {
+        if (user.isPresent()) {
             throw new IllegalArgumentException("User with this mail already exists");
         }
         UserEntity userEntity = userMapper.toEntity(userDto);
+        userEntity.setPassword(passwordEncoder.encode(userEntity.getPassword()));
         UserEntity savedUser = userRepository.save(userEntity);
         return userMapper.toDto(savedUser);
     }
 
     public UserDto updateUser(Long id, UserDto userDto) {
         Optional<UserEntity> user = userRepository.findById(id);
-        if(user.isEmpty())
-        {
+        if (user.isEmpty()) {
             return null;
         }
         UserEntity userEntity = userMapper.toEntity(userDto);
@@ -57,9 +59,14 @@ public class UserService {
     }
 
     public void deleteUser(Long id) {
-        if(userRepository.existsById(id))
-        {
+        if (userRepository.existsById(id)) {
             userRepository.deleteById(id);
         }
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 }
