@@ -35,8 +35,6 @@
         @Column(nullable = false)
         private String lastName;
 
-        @Column(nullable = false)
-        private boolean isActive = true;
 
         @ManyToMany
         @JoinTable(
@@ -102,14 +100,6 @@
 
         public void setEmail(String email) {
             this.email = email;
-        }
-
-        public boolean isActive() {
-            return isActive;
-        }
-
-        public void setActive(boolean active) {
-            isActive = active;
         }
 
         public String getLastName() {
