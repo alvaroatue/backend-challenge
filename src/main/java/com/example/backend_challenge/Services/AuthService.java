@@ -1,7 +1,7 @@
 package com.example.backend_challenge.Services;
 
 
-import com.example.backend_challenge.Dtos.AuthResponse;
+import com.example.backend_challenge.Dtos.TokenResponse;
 import com.example.backend_challenge.Dtos.LoginRequestDto;
 import com.example.backend_challenge.Dtos.RegisterRequestDto;
 import com.example.backend_challenge.Entities.TokenEntity;
@@ -28,28 +28,22 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
-    public AuthResponse register(RegisterRequestDto request) {
+    public TokenResponse register(RegisterRequestDto request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email already exists");
         }
-
         var user = UserEntity.builder()
                 .name(request.getName())
-                .lastName(request.getLastName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();
-
         var savedUser = userRepository.save(user);
         var jwtToken = jwtService.generateToken(user);
+        var refreshToken = jwtService.generateRefreshToken(user);
         saveUserToken(savedUser, jwtToken);
-
-        return AuthResponse.builder()
-                .token(jwtToken)
-                .build();
     }
 
-    public AuthResponse login(LoginRequestDto request) {
+    public TokenResponse login(LoginRequestDto request) {
         try {
             System.out.println("Attempting to authenticate user: " + request.getEmail());
 
@@ -71,7 +65,7 @@ public class AuthService {
             revokeAllUserTokens(user);
             saveUserToken(user, jwtToken);
 
-            return AuthResponse.builder()
+            return TokenResponse.builder()
                     .token(jwtToken)
                     .build();
         } catch (Exception e) {
@@ -90,6 +84,7 @@ public class AuthService {
                 .build();
         tokenRepository.save(token);
     }
+
 
     private void revokeAllUserTokens(UserEntity user) {
         var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getId());

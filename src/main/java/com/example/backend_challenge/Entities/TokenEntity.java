@@ -9,10 +9,10 @@
 
     @Data
     @Table(name = "tokens")
-    @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     @Entity
+    @Builder
     public class TokenEntity {
         @Id
         @GeneratedValue (strategy = GenerationType.IDENTITY)
