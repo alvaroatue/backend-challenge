@@ -13,6 +13,7 @@ import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -49,24 +50,36 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequestDto request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
+        try {
+            System.out.println("Attempting to authenticate user: " + request.getEmail());
 
-        var user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow();
-        var jwtToken = jwtService.generateToken(user);
-        revokeAllUserTokens(user);
-        saveUserToken(user, jwtToken);
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
 
-        return AuthResponse.builder()
-                .token(jwtToken)
-                .build();
+            System.out.println("Authentication successful");
+
+            var user = userRepository.findByEmail(request.getEmail())
+                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+            var jwtToken = jwtService.generateToken(user);
+            System.out.println("Generated token: " + jwtToken);
+
+            revokeAllUserTokens(user);
+            saveUserToken(user, jwtToken);
+
+            return AuthResponse.builder()
+                    .token(jwtToken)
+                    .build();
+        } catch (Exception e) {
+            System.out.println("Authentication failed: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
     }
-
     private void saveUserToken(UserEntity user, String jwtToken) {
         var token = TokenEntity.builder()
                 .user(user)

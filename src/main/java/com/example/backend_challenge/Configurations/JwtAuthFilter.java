@@ -31,33 +31,23 @@
                 @NonNull HttpServletResponse response,
                 @NonNull FilterChain filterChain
         ) throws ServletException, IOException {
-            final String authHeader = request.getHeader("Authorization");
-            final String jwt;
-            final String userEmail;
+            try {
+                String path = request.getRequestURI();
+                System.out.println("Processing request to path: " + path);
 
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                filterChain.doFilter(request, response);
-                return;
-            }
+                final String authHeader = request.getHeader("Authorization");
+                System.out.println("Auth header: " + authHeader);
 
-            jwt = authHeader.substring(7);
-            userEmail = jwtService.extractUsername(jwt);
-
-            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userService.loadUserByUsername(userEmail);
-
-                if (jwtService.isTokenValid(jwt, (UserEntity) userDetails)) {
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
-                    authToken.setDetails(
-                            new WebAuthenticationDetailsSource().buildDetails(request)
-                    );
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                    System.out.println("No valid auth header found, proceeding with filter chain");
+                    filterChain.doFilter(request, response);
+                    return;
                 }
+
+                // Rest of your code...
+            } catch (Exception e) {
+                System.out.println("Error in JWT filter: " + e.getMessage());
+                e.printStackTrace();
             }
-            filterChain.doFilter(request, response);
         }
     }
