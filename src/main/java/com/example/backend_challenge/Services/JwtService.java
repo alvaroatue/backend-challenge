@@ -6,6 +6,9 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
 import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -16,40 +19,29 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Service
 public class JwtService  {
     @Value("${application.security.jwt.secret-key}")
     private String secretKey;
 
     @Value("${application.security.jwt.expiration}")
-    private Long jwtExpiration;
+    private long jwtExpiration;
 
     @Value("${application.security.jwt.refresh-token.expiration}")
-    private Long refreshTokenExpiration;
+    private long refreshTokenExpiration;
 
 
-    public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+    private String generateToken(final UserEntity user) {
+        return buildToken(user, jwtExpiration);
     }
 
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
+    private String generateRefreshToken(final UserEntity user) {
+        return buildToken(user, refreshTokenExpiration);
     }
 
-    private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-    }
-
-    public String generateToken(UserEntity userDetails) {
-        Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, userDetails.getUsername());
-    }
 
     private String buildToken(final UserEntity user, final long expiration) {
        return Jwts.builder()
@@ -58,24 +50,12 @@ public class JwtService  {
                        .subject(user.getEmail())
                        .issuedAt(new Date(System.currentTimeMillis()))
                           .expiration(new Date(System.currentTimeMillis() + expiration))
-                       .signWith(key, SignatureAlgorithm.HS256)
+                       .signWith(getSingningKey())
+                       .compact();
     }
 
-    private SecretKey getInitializedKey() {
-        byte [] keyBytes = Decoders.BASE64.decode(secretKey);
+    private SecretKey getSingningKey(){
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
-    }
-
-    public boolean isTokenValid(String token, UserEntity userDetails) {
-        final String username = extractUsername(token);
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token));
-    }
-
-    private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
-
-    private Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
     }
 }
