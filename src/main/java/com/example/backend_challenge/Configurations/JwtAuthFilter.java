@@ -11,12 +11,16 @@
     import lombok.RequiredArgsConstructor;
     import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
     import org.springframework.security.core.context.SecurityContextHolder;
+    import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
     import org.springframework.security.core.userdetails.UserDetails;
+    import org.springframework.security.core.userdetails.UsernameNotFoundException;
     import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
     import org.springframework.stereotype.Component;
     import org.springframework.web.filter.OncePerRequestFilter;
 
     import java.io.IOException;
+    import java.util.ArrayList;
+    import java.util.Collections;
 
     @Component
     @RequiredArgsConstructor
@@ -31,23 +35,40 @@
                 @NonNull HttpServletResponse response,
                 @NonNull FilterChain filterChain
         ) throws ServletException, IOException {
-            try {
-                String path = request.getRequestURI();
-                System.out.println("Processing request to path: " + path);
-
-                final String authHeader = request.getHeader("Authorization");
-                System.out.println("Auth header: " + authHeader);
-
-                if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                    System.out.println("No valid auth header found, proceeding with filter chain");
-                    filterChain.doFilter(request, response);
-                    return;
-                }
-
-                // Rest of your code...
-            } catch (Exception e) {
-                System.out.println("Error in JWT filter: " + e.getMessage());
-                e.printStackTrace();
+            final String authHeader = request.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                filterChain.doFilter(request, response);
+                return;
             }
+
+            final String jwt = authHeader.substring(7);
+            final String userEmail = jwtService.extractUsername(jwt);
+
+            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                // Cargar el usuario desde el servicio
+                UserEntity userEntity = userService.findByUsername(userEmail)
+                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+                // Validar el token
+                if (jwtService.isTokenValid(jwt, userEntity)) {
+                    // Convertir UserEntity a UserDetails
+                    UserDetails userDetails = new org.springframework.security.core.userdetails.User(
+                            userEntity.getUsername(),
+                            userEntity.getPassword(),
+                            Collections.emptyList() // O usar roles si los tienes
+                    );
+
+                    // Crear el token de autenticación
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            }
+
+            filterChain.doFilter(request, response);
         }
     }

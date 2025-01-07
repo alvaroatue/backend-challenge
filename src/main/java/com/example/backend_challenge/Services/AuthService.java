@@ -41,6 +41,9 @@ public class AuthService {
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
         saveUserToken(savedUser, jwtToken);
+        return TokenResponse.builder()
+                .token(jwtToken)
+                .build();
     }
 
     public TokenResponse login(LoginRequestDto request) {
@@ -95,5 +98,22 @@ public class AuthService {
             token.setRevoked(true);
         });
         tokenRepository.saveAll(validUserTokens);
+    }
+
+    public TokenResponse refreshToken(String oldToken) {
+        String username = jwtService.extractUsername(oldToken);
+        if (username == null) {
+            throw new IllegalArgumentException("Invalid token: username not found");
+        }
+
+        UserEntity user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with username: " + username));
+
+        if (!jwtService.isTokenValid(oldToken, user)) {
+            throw new IllegalArgumentException("Invalid or expired token");
+        }
+
+        String newToken = jwtService.generateToken(user);
+        return TokenResponse.builder().token(newToken).build();
     }
 }

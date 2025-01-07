@@ -73,6 +73,9 @@ public class UserService implements UserDetailsService {
         return user;
     }
 
+    public Optional<UserEntity> findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
 
 
 }

@@ -10,11 +10,9 @@ import org.antlr.v4.runtime.Token;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-
 public class AuthController {
 
     private final AuthService authService;
@@ -30,8 +28,10 @@ public class AuthController {
         final TokenResponse token = authService.login(request);
         return ResponseEntity.ok(token);
     }
-    @PostMapping("/refresh)
-            public  ResponseEntity <TokenResponse> refresh(@RequestHeader(HttpHeaders.AUTHORIZATION)final String authHeader){
-                return authService.refreshToken(authHeader);
-            }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<TokenResponse> refresh(@RequestHeader(HttpHeaders.AUTHORIZATION) final String authHeader) {
+        final TokenResponse token = authService.refreshToken(authHeader);
+        return ResponseEntity.ok(token);
+    }
 }

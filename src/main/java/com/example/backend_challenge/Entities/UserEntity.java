@@ -18,10 +18,13 @@
     @NoArgsConstructor
     @AllArgsConstructor
     @Builder
-    public class UserEntity {
+    public class UserEntity implements UserDetails {
         @Id
         @GeneratedValue (strategy = GenerationType.IDENTITY)
         private Long id;
+
+        @Column(nullable = false)
+        private String username;
 
         @Column(nullable = false)
         private String password;
@@ -48,5 +51,34 @@
         private List<TokenEntity> tokens;
 
 
+        @Override
+        public Collection<? extends GrantedAuthority> getAuthorities() {
+            return List.of();
+        }
 
+        @Override
+        public String getUsername() {
+            return username;
+        }
+
+
+        @Override
+        public boolean isAccountNonExpired() {
+            return true;
+        }
+
+        @Override
+        public boolean isAccountNonLocked() {
+            return true;
+        }
+
+        @Override
+        public boolean isCredentialsNonExpired() {
+            return true;
+        }
+
+        @Override
+        public boolean isEnabled() {
+            return true;
+        }
     }
