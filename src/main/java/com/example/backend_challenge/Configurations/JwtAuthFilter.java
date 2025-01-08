@@ -45,20 +45,16 @@
             final String userEmail = jwtService.extractUsername(jwt);
 
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                // Cargar el usuario desde el servicio
                 UserEntity userEntity = userService.findByUsername(userEmail)
                         .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-                // Validar el token
                 if (jwtService.isTokenValid(jwt, userEntity)) {
-                    // Convertir UserEntity a UserDetails
                     UserDetails userDetails = new org.springframework.security.core.userdetails.User(
                             userEntity.getUsername(),
                             userEntity.getPassword(),
-                            Collections.emptyList() // O usar roles si los tienes
+                            Collections.emptyList()
                     );
 
-                    // Crear el token de autenticación
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
@@ -66,7 +62,11 @@
                     );
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
+                } else {
+                    System.out.println("Invalid JWT token");
                 }
+            } else {
+                System.out.println("User email is null or user is already authenticated");
             }
 
             filterChain.doFilter(request, response);

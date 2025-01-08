@@ -28,22 +28,18 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
-    public TokenResponse register(RegisterRequestDto request) {
+    public void register(RegisterRequestDto request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email already exists");
         }
         var user = UserEntity.builder()
                 .name(request.getName())
+                .lastName(request.getLastName())
                 .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
+                .username(request.getUsername())
+                .password(passwordEncoder.encode(request.getPassword())) // Encrypt the password
                 .build();
-        var savedUser = userRepository.save(user);
-        var jwtToken = jwtService.generateToken(user);
-        var refreshToken = jwtService.generateRefreshToken(user);
-        saveUserToken(savedUser, jwtToken);
-        return TokenResponse.builder()
-                .token(jwtToken)
-                .build();
+        userRepository.save(user);
     }
 
     public TokenResponse login(LoginRequestDto request) {
@@ -78,15 +74,15 @@ public class AuthService {
         }
     }
     private void saveUserToken(UserEntity user, String jwtToken) {
-        var token = TokenEntity.builder()
-                .user(user)
-                .token(jwtToken)
-                .tokenType(TokenType.BEARER)
-                .expired(false)
-                .revoked(false)
-                .build();
-        tokenRepository.save(token);
-    }
+    var token = TokenEntity.builder()
+            .user(user)
+            .token(jwtToken)
+            .tokenType(TokenType.BEARER)
+            .expired(false)
+            .revoked(false)
+            .build();
+    tokenRepository.save(token);
+}
 
 
     private void revokeAllUserTokens(UserEntity user) {
