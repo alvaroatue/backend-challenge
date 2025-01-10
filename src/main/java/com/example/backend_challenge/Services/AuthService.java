@@ -37,7 +37,7 @@ public class AuthService {
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .username(request.getUsername())
-                .password(passwordEncoder.encode(request.getPassword())) // Encrypt the password
+                .password(passwordEncoder.encode(request.getPassword()))
                 .build();
         userRepository.save(user);
     }

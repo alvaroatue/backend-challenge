@@ -77,7 +77,6 @@ public class    JwtService {
     private String buildToken(UserEntity user, long expiration) {
         return Jwts.builder()
                 .setSubject(user.getEmail())
-                .setClaims(Map.of("name", user.getName()))
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
