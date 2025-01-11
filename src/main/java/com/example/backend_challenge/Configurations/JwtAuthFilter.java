@@ -10,6 +10,8 @@
     import lombok.NonNull;
     import lombok.RequiredArgsConstructor;
     import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+    import org.springframework.security.core.GrantedAuthority;
+    import org.springframework.security.core.authority.SimpleGrantedAuthority;
     import org.springframework.security.core.context.SecurityContextHolder;
     import org.springframework.security.core.userdetails.MapReactiveUserDetailsService;
     import org.springframework.security.core.userdetails.UserDetails;
@@ -21,6 +23,7 @@
     import java.io.IOException;
     import java.util.ArrayList;
     import java.util.Collections;
+    import java.util.List;
 
     @Component
     @RequiredArgsConstructor
@@ -35,38 +38,39 @@
                 @NonNull HttpServletResponse response,
                 @NonNull FilterChain filterChain
         ) throws ServletException, IOException {
-            final String authHeader = request.getHeader("Authorization");
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                filterChain.doFilter(request, response);
-                return;
-            }
+            try {
+                final String authHeader = request.getHeader("Authorization");
+                System.out.println("Processing request to: " + request.getRequestURI());
 
-            final String jwt = authHeader.substring(7);
-            final String userEmail = jwtService.extractUsername(jwt);
-
-            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserEntity userEntity = userService.findByUsername(userEmail)
-                        .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-                if (jwtService.isTokenValid(jwt, userEntity)) {
-                    UserDetails userDetails = new org.springframework.security.core.userdetails.User(
-                            userEntity.getUsername(),
-                            userEntity.getPassword(),
-                            Collections.emptyList()
-                    );
-
-                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
-                    );
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                } else {
-                    System.out.println("Invalid JWT token");
+                if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                    filterChain.doFilter(request, response);
+                    return;
                 }
-            } else {
-                System.out.println("User email is null or user is already authenticated");
+
+                final String jwt = authHeader.substring(7);
+                System.out.println("Validating token...");
+
+                final String userEmail = jwtService.extractUsername(jwt);
+                System.out.println("Extracted email: " + userEmail);
+
+                if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    UserEntity userEntity = userService.findByEmail(userEmail)
+                            .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + userEmail));
+
+                    if (jwtService.isTokenValid(jwt, userEntity)) {
+                        System.out.println("Token is valid");
+                        UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
+                                userEntity, null, userEntity.getAuthorities());
+                        authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                    } else {
+                        System.out.println("Token validation failed");
+                    }
+                }
+
+            } catch (Exception e) {
+                System.out.println("Error in filter: " + e.getMessage());
+                e.printStackTrace();
             }
 
             filterChain.doFilter(request, response);

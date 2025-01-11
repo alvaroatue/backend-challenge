@@ -22,11 +22,11 @@ import org.springframework.stereotype.Service;
 @Builder
 public class AuthService {
 
-    private final UserRepository userRepository;
-    private final TokenRepository tokenRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
-    private final AuthenticationManager authenticationManager;
+        private final UserRepository userRepository;
+        private final TokenRepository tokenRepository;
+        private final PasswordEncoder passwordEncoder;
+        private final JwtService jwtService;
+        private final AuthenticationManager authenticationManager;
 
     public void register(RegisterRequestDto request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -73,17 +73,19 @@ public class AuthService {
             throw e;
         }
     }
-    private void saveUserToken(UserEntity user, String jwtToken) {
-    var token = TokenEntity.builder()
-            .user(user)
-            .token(jwtToken)
-            .tokenType(TokenType.BEARER)
-            .expired(false)
-            .revoked(false)
-            .build();
-    tokenRepository.save(token);
-}
 
+    private void saveUserToken(UserEntity user, String jwtToken) {
+        System.out.println("Saving token for user: " + user.getEmail());
+        var token = TokenEntity.builder()
+                .user(user)
+                .token(jwtToken)
+                .tokenType(TokenType.BEARER)
+                .expired(false)
+                .revoked(false)
+                .build();
+        tokenRepository.save(token);
+        System.out.println("Token saved successfully");
+    }
 
     private void revokeAllUserTokens(UserEntity user) {
         var validUserTokens = tokenRepository.findAllValidTokenByUser(user.getId());
@@ -97,13 +99,13 @@ public class AuthService {
     }
 
     public TokenResponse refreshToken(String oldToken) {
-        String username = jwtService.extractUsername(oldToken);
-        if (username == null) {
-            throw new IllegalArgumentException("Invalid token: username not found");
+        String email = jwtService.extractUsername(oldToken);
+        if (email == null) {
+            throw new IllegalArgumentException("Invalid token: email not found");
         }
 
-        UserEntity user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("User not found with username: " + username));
+        UserEntity user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with email: " + email));
 
         if (!jwtService.isTokenValid(oldToken, user)) {
             throw new IllegalArgumentException("Invalid or expired token");

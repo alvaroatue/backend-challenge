@@ -5,6 +5,8 @@ import com.example.backend_challenge.Dtos.UserDto;
 import com.example.backend_challenge.Services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +24,10 @@ public class UserController {
 
     @GetMapping
     List<UserDto> getAllUsers() {
+        System.out.println("Accessing getAllUsers endpoint");
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        System.out.println("Current user: " + auth.getName());
+        System.out.println("Authorities: " + auth.getAuthorities());
         return userService.getAllUsers();
     }
     @GetMapping("/{id}")
