@@ -47,6 +47,9 @@ public class ReadingEntity {
     @Column(nullable = false)
     private double otherGases;
 
+    @Column
+    private String sensorStatus;
+
     public Long getId() {
         return id;
     }
