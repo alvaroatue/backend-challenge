@@ -20,6 +20,7 @@ public class ReadingMapper {
         readingDto.setTension(readingEntity.getTension());
         readingDto.setCarbonMonoxide(readingEntity.getCarbonMonoxide());
         readingDto.setOtherGases(readingEntity.getOtherGases());
+        readingDto.setSensorStatus(readingEntity.getSensorStatus());
         return readingDto;
     }
 
@@ -35,6 +36,7 @@ public class ReadingMapper {
         readingEntity.setTension(readingDto.getTension());
         readingEntity.setCarbonMonoxide(readingDto.getCarbonMonoxide());
         readingEntity.setOtherGases(readingDto.getOtherGases());
+        readingEntity.setSensorStatus(readingDto.getSensorStatus());
         return readingEntity;
     }
 

@@ -20,6 +20,7 @@ public class ReadingDto {
     Double tension;
     Double carbonMonoxide;
     Double otherGases;
+    String sensorStatus;
 
     public Long getId() {
         return id;
@@ -99,5 +100,12 @@ public class ReadingDto {
 
     public void setOtherGases(Double otherGases) {
         this.otherGases = otherGases;
+    }
+
+    public String getSensorStatus() {
+        return sensorStatus;
+    }
+    public void setSensorStatus(String sensorStatus) {
+        this.sensorStatus = sensorStatus;
     }
 }
