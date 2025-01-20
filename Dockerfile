@@ -1,13 +1,13 @@
-# Usa una imagen base ligera de Java
-FROM openjdk:21-jdk-slim
+# Usa Amazon Corretto 21 como imagen base
+FROM amazoncorretto:21-alpine
 
-# Crea un directorio de trabajo dentro del contenedor
+# Establece el directorio de trabajo dentro del contenedor
 WORKDIR /app
 
-# Copia el archivo JAR generado por tu proyecto al contenedor
-COPY target/*.jar app.jar
+# Copia el archivo JAR generado al contenedor
+COPY target/backend-challenge-0.0.1-SNAPSHOT.jar app.jar
 
-# Expone el puerto 8080
+# Expone el puerto de la aplicación
 EXPOSE 8080
 
 # Comando para ejecutar la aplicación
